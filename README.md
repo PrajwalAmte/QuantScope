@@ -77,10 +77,15 @@ Result: Reliance Industries analysis in INR
 ### Supported Markets
 | Market | Suffix | Currency | Example |
 |--------|--------|----------|---------|
-| US | - | $ | AAPL |
+| US | (none) | $ | AAPL |
 | Indian | .NS | ₹ | RELIANCE.NS |
 | UK | .L | £ | VODL.L |
 | Canada | .TO | C$ | SHOP.TO |
+| Australia | .AX | A$ | CBA.AX |
+| Germany | .DE | € | SAP.DE |
+| France | .PA | € | MC.PA |
+| Japan | .T | ¥ | 7203.T |
+| Hong Kong | .HK | HK$ | 0700.HK |
 
 ## Technical Indicators
 
@@ -112,7 +117,3 @@ Result: Reliance Industries analysis in INR
 ## Disclaimer
 
 This tool is for educational purposes only. Not financial advice. Always consult professionals before investing.
-
-## License
-
-MIT License - see LICENSE file for details.
