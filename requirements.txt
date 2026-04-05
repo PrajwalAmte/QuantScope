@@ -1,0 +1,17 @@
+streamlit==1.37.1
+yfinance==1.2.0
+plotly==5.24.1
+python-dotenv==1.0.0
+langchain==1.2.15
+langchain-core==1.2.26
+langchain-groq==1.1.2
+langchain-openai==1.1.12
+langchain-anthropic==1.4.0
+langchain-ollama==1.0.1
+openai==2.30.0
+anthropic==0.89.0
+pandas==2.2.2
+numpy==1.26.4
+tiktoken==0.12.0
+httpx==0.28.1
+pydantic==2.12.5
