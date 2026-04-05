@@ -1,119 +1,282 @@
 # QuantScope
 
-A Streamlit-based stock analysis application with real-time data, technical indicators, interactive charts, and AI-powered insights for global markets.
+<div align="center">
 
-## Quick Start
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://streamlit.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-1. **Install dependencies**
-   ```bash
-   pip install streamlit yfinance plotly python-dotenv langchain-groq langchain pandas numpy
-   ```
+**AI-Powered Stock Analysis Platform — Bring Your Own Key**
 
-2. **Set up environment**
-   ```bash
-   echo "GROQ_API_KEY=your_groq_api_key_here" > .env
-   ```
+A modern Streamlit-based stock analysis application with real-time data, technical indicators, interactive charts, and AI-powered insights using your own API keys.
 
-3. **Run the app**
-   ```bash
-   streamlit run main.py
-   ```
+[Features](#features) • [Quick Start](#quick-start) • [Architecture](#architecture) • [Usage](#usage)
+
+</div>
+
+---
+
+## Overview
+
+QuantScope is a **bring-your-own-key (BYOK)** platform designed for independent traders and analysts. No shared API quotas, no rate limits imposed by the platform — you control your own infrastructure with your API keys.
+
+- **Real-time data** via Yahoo Finance (free, no key required)
+- **AI analysis** via your choice of Groq, OpenAI, Anthropic, or Ollama (bring your own key)
+- **Multi-market support** across 9 global exchanges
+- **Type-safe codebase** with full type hints and modern Python patterns
+- **Production-ready logging** and error handling
 
 ## Features
 
 - **Multi-Market Support**: US, Indian, UK, Canada, Australia, Germany, France, Japan, Hong Kong
-- **Real-Time Data**: Live stock prices via Yahoo Finance
-- **Technical Analysis**: RSI, SMA, Bollinger Bands
-- **Interactive Charts**: Price, candlestick, volume, technical indicators
-- **AI Chat**: Ask questions about stocks using Groq's Llama model
-- **Smart Queries**: Natural language input like "AAPL 3 months"
-- **Data Export**: Download as CSV
+- **Real-Time Data**: Live stock prices via Yahoo Finance API
+- **Technical Analysis**: RSI (14), SMA (20/50), Bollinger Bands
+- **Interactive Charts**: 
+  - Price charts (line & candlestick)
+  - Volume analysis
+  - Technical indicators overlay
+  - RSI signals
+- **AI Chat Interface**: Ask questions about stocks using your choice of Groq, OpenAI, Anthropic, or local Ollama models (bring your key)
+- **Smart Parsing**: Natural language queries like "AAPL 3 months"
+- **Data Export**: Download analysis data as CSV
+
+## Quick Start
+
+### 1. Clone & Setup
+
+```bash
+git clone https://github.com/yourusername/QuantScope.git
+cd QuantScope
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### 2. Configure API Key
+
+Choose a provider and get your key:
+- **Groq** (free tier available): [console.groq.com](https://console.groq.com)
+- **OpenAI**: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Anthropic**: [console.anthropic.com](https://console.anthropic.com/settings/keys)
+- **Ollama** (local, no key needed): [ollama.com](https://ollama.com/download)
+
+**Option A: Session Input (Recommended)**
+- Run the app: `streamlit run main.py`
+- Select provider and enter your API key in the sidebar
+- Key stays for the session only
+
+**Option B: Environment Variable**
+```bash
+cp .env.example .env
+# Edit .env and fill in the keys you want to use
+streamlit run main.py
+```
+
+### 3. Run
+
+```bash
+streamlit run main.py
+```
+
+The app opens at `http://localhost:8501`
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[Stock Analysis Tool] --> B[User Input]
-    A --> C[Data Fetching]
-    A --> D[Analysis & Charts]
-    A --> E[AI Chat]
-    
-    B --> B1[Symbol & Market]
-    C --> C1[Yahoo Finance API]
-    D --> D1[Technical Indicators]
-    D --> D2[Price Charts]
-    E --> E1[Groq LLM]
-    
-    style A fill:#e1f5fe,color: #000000
-    style B fill:#f3e5f5,color: #000000
-    style C fill:#e8f5e8,color: #000000
-    style D fill:#fff3e0,color: #000000
-    style E fill:#fce4ec,color: #000000
+    subgraph UI["Streamlit UI"]
+        SB[Sidebar\nProvider · Model · API Key · Test Connection]
+        IN[Main Input\nStock query · Market selector]
+        CH[Charts\nPrice · Technical · RSI · Volume]
+        AI[AI Chat\nPersistent below charts]
+    end
+
+    subgraph Logic["Application Layer"]
+        SA[StockAnalyzer\nFetch · Indicators · Charts · Metrics]
+        AK[APIKeyManager\nSession state · Provider routing]
+        MR[MarketRegistry\nSuffix · Currency config]
+        PR[PROVIDERS dict\nGroq · OpenAI · Anthropic · Ollama]
+        BL[_build_llm\ncached LLM factory]
+    end
+
+    subgraph External["External Services"]
+        YF[Yahoo Finance\nFree · No key required]
+        GR[Groq API]
+        OA[OpenAI API]
+        AN[Anthropic API]
+        OL[Ollama\nLocal]
+    end
+
+    SB --> AK
+    IN --> SA
+    SA --> MR
+    CH --> SA
+    AI --> BL
+    AK --> PR
+    PR --> BL
+    SA --> YF
+    BL --> GR
+    BL --> OA
+    BL --> AN
+    BL --> OL
 ```
 
-### Architecture Layers
+### Key Design Decisions
 
-1. **User Interface Layer**: Streamlit components for user interaction, charts, chat, and session management
-2. **Business Logic Layer**: Core StockAnalyzer class handling symbol processing, analysis, and chart generation
-3. **Data Processing Layer**: Technical indicators calculation, caching, and data validation
-4. **External Services Layer**: Integration with Yahoo Finance, Groq LLM, and Plotly visualization
+- **MarketRegistry**: Centralized market configuration (no magic strings scattered across the codebase)
+- **APIKeyManager**: Session-based key management (secure by default, never stored server-side)
+- **PROVIDERS dict**: Single source of truth for all LLM providers, models, and API endpoints
+- **`_build_llm()` with `@st.cache_resource`**: LLM instances are cached by (provider, credential, model) tuple — avoids re-initialising on every rerun
+- **`_self` in `@st.cache_data`**: Streamlit cannot hash `self`; prefixing with underscore tells the cache to exclude it
+- **Type Hints**: Full coverage for IDE support and documentation
+- **Caching**: `@st.cache_data(ttl=300)` on stock fetches — 5-minute TTL balances freshness and rate limits
 
-## Usage Examples
+## Usage
 
-### Basic Analysis
+### Example Queries
+
+**Natural Language Parsing**
 ```
 Input: "AAPL 6 months"
-Output: Apple stock analysis with 6-month historical data
+Output: Apple stock analysis | 6-month period
+
+Input: "RELIANCE"
+Output: Reliance Industries | 3-month default
 ```
 
-### Multi-Market
-```
-Symbol: RELIANCE
-Market: Indian
-Period: 1y
-Result: Reliance Industries analysis in INR
-```
+**Manual Input**
+- Use Advanced Settings to specify exact symbol, market, and period
 
-### Supported Markets
+### Supported Markets & Symbols
+
 | Market | Suffix | Currency | Example |
 |--------|--------|----------|---------|
-| US | (none) | $ | AAPL |
-| Indian | .NS | ₹ | RELIANCE.NS |
-| UK | .L | £ | VODL.L |
-| Canada | .TO | C$ | SHOP.TO |
-| Australia | .AX | A$ | CBA.AX |
-| Germany | .DE | € | SAP.DE |
-| France | .PA | € | MC.PA |
-| Japan | .T | ¥ | 7203.T |
-| Hong Kong | .HK | HK$ | 0700.HK |
+| **US** | (none) | $ | `AAPL` |
+| **Indian** | `.NS` | ₹ | `RELIANCE` |
+| **UK** | `.L` | £ | `VODL` |
+| **Canada** | `.TO` | C$ | `SHOP` |
+| **Australia** | `.AX` | A$ | `CBA` |
+| **Germany** | `.DE` | € | `SAP` |
+| **France** | `.PA` | € | `MC` |
+| **Japan** | `.T` | ¥ | `7203` |
+| **Hong Kong** | `.HK` | HK$ | `0700` |
 
-## Technical Indicators
+### Technical Indicators
 
-- **RSI**: 14-period Relative Strength Index with overbought/oversold signals
-- **SMA**: 20-period and 50-period Simple Moving Averages
-- **Bollinger Bands**: 20-period bands with 2 standard deviations
+- **RSI (14-period)**: Overbought (>70), Neutral (30-70), Oversold (<30)
+- **SMA**: 20-period (short-term) and 50-period (mid-term) trends
+- **Bollinger Bands**: 20-period with 2 standard deviations
 
-## AI Chat Features
+## BYOK Model
 
-- Technical analysis insights
-- Price trend explanations
-- Risk assessment guidance
-- Context-aware responses using real-time stock data
+QuantScope is designed for users who want complete control over their API usage:
 
-## Key Dependencies
+### Why BYOK?
+- **No quota limits** imposed by the platform
+- **Cost transparency** — you pay only for what you use
+- **Data privacy** — your keys, your data
+- **Flexibility** — upgrade/downgrade Groq plans independently
 
-- streamlit: Web application framework
-- yfinance: Yahoo Finance API wrapper
-- plotly: Interactive charts
-- langchain-groq: Groq LLM integration
-- python-dotenv: Environment variable management
+### API Key Security
+- Keys stored **in-session only** (not persisted to server)
+- Optional browser localStorage for convenience (your domain, your storage)
+- No server-side key storage
+- Clear deletion when session ends
+
+## Development
+
+### Code Standards
+- **Type Hints**: Full coverage (`mypy` compatible)
+- **Logging**: All major operations logged at INFO level
+- **Error Handling**: Graceful degradation with user-friendly messages
+- **Docstrings**: Google-style format on all functions and classes
+
+### Testing
+```bash
+# Lint
+black main.py
+
+# Type check
+mypy main.py --ignore-missing-imports
+```
+
+### Project Structure
+```
+QuantScope/
+├── main.py                 # Application entry point
+├── requirements.txt        # Python dependencies
+├── .streamlit/
+│   └── config.toml        # Streamlit configuration
+├── .env.example           # Environment variables template
+└── README.md              # This file
+```
 
 ## Troubleshooting
 
-**"No data found"**: Check symbol format and market suffix
-**"GROQ_API_KEY not found"**: Add API key to `.env` file
-**Charts not loading**: Verify internet connection and dependencies
+| Issue | Solution |
+|-------|----------|
+| "No data found" | Check symbol format and correct market suffix |
+| "AI Chat unavailable" | Enter valid Groq API key in sidebar. Get one free at console.groq.com |
+| Charts not rendering | Verify internet connection and Plotly installation |
+| Slow data fetching | First load caches for 5 minutes. Yahoo Finance may rate-limit. |
+
+## Dependencies
+
+```
+Core:
+- streamlit        Web app framework
+- yfinance         Yahoo Finance API wrapper (free)
+- plotly           Interactive charts
+- pandas           Data manipulation
+- numpy            Numerical computing
+
+AI:
+- langchain-groq       Groq integration
+- langchain-openai     OpenAI integration
+- langchain-anthropic  Anthropic integration
+- langchain-ollama     Local Ollama integration
+- langchain            LLM orchestration
+
+Configuration:
+- python-dotenv    Environment variable management
+```
 
 ## Disclaimer
 
-This tool is for educational purposes only. Not financial advice. Always consult professionals before investing.
+**Educational Use Only**. QuantScope is a data and analysis tool, not financial advice. Always conduct independent research and consult qualified financial advisors before making investment decisions.
+
+## License
+
+MIT License — see [LICENSE](LICENSE) file for details.
+
+## Contributing
+
+Contributions welcome! Please:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request with description
+4. Ensure code follows black/mypy standards
+
+## Roadmap
+
+- [ ] Watchlist persistence (Streamlit cloud)
+- [ ] Portfolio tracking
+- [ ] Alert notifications
+- [ ] Extended technical indicators (MACD, Stochastic)
+- [ ] Options analysis
+- [ ] Mobile responsiveness optimization
+
+## Support
+
+- **Issues**: GitHub Issues
+- **Documentation**: See [docs/](docs/) folder
+- **API Help**: [Groq Console](https://console.groq.com) | [yfinance Docs](https://yfinance.readthedocs.io)
+
+---
+
+<div align="center">
+
+Built by Prajwal Amte
+
+</div>
